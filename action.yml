@@ -1,14 +1,20 @@
 name: "Flexlate Update and PR"
 description: "Run Flexlate update and create a PR or issue"
+inputs:
+  gh_token: # id of input
+    description: "Github Token"
+    required: true
 runs:
   using: "composite"
   steps:
     - name: Install Flexlate
       run: pip install flexlate
+      shell: bash
     - name: Set Git Committer
       run: |
         git config --global user.email "flexlate@nickderobertis.com"
         git config --global user.name "Flexlate"
+      shell: bash
     - name: Check if template is out of date
       id: template_check
       run: |
@@ -19,9 +25,11 @@ runs:
           echo "No updates to template needed, will exit workflow.";
           echo ::set-output name=template_update::false;
         fi;
+      shell: bash
     - name: Set template update branch
       if: steps.template_check.outputs.template_update == 'true'
       run: git checkout -b template-patches
+      shell: bash
     - name: Template Update
       id: template_update
       if: steps.template_check.outputs.template_update == 'true'
@@ -33,17 +41,19 @@ runs:
           echo "Encountered conflicts while trying to apply update. Will open an issue rather than a PR.";
           echo ::set-output name=raise_update_issue::true;
         fi;
+      shell: bash
     - name: Create Issue Template, Checking if Github Actions Workflow Updated
       id: workflow_update_check
       if: steps.template_check.outputs.template_update == 'true'
       run: bash scripts/create-flexlate-issue-template.sh
+      shell: bash
     - name: Check if Issue Exists
       uses: nickderobertis/check-if-issue-exists-action@master
       if: steps.template_check.outputs.template_update == 'true'
       id: check_if_issue_exists
       with:
         repo: ${{ github.repository }}
-        token: ${{ secrets.gh_token }}
+        token: ${{ inputs.gh_token }}
         title: Manual Update to Files from Flexlate Needed
         labels: automated issue, maintenance
     - name: Create Issue to Manually Update Template
@@ -52,16 +62,19 @@ runs:
       with:
         filename: temp-issue-template.md
       env:
-        GITHUB_TOKEN: ${{ secrets.gh_token }}
+        GITHUB_TOKEN: ${{ inputs.gh_token }}
     - name: Remove temporary issue template so it does not get committed
       if: steps.template_check.outputs.template_update == 'true'
       run: rm temp-issue-template.md
+      shell: bash
     - name: Push changes to Flexlate template branch
       if: steps.template_check.outputs.template_update == 'true' && steps.template_update.outputs.raise_update_issue == 'false' && steps.workflow_update_check.outputs.workflow_updated == 'false'
       run: git push origin flexlate-templates-template-patches
+      shell: bash
     - name: Push changes to Flexlate output branch
       if: steps.template_check.outputs.template_update == 'true' && steps.template_update.outputs.raise_update_issue == 'false' && steps.workflow_update_check.outputs.workflow_updated == 'false'
       run: git push origin flexlate-output-template-patches
+      shell: bash
     - name: Set back to main branch
       if: steps.template_check.outputs.template_update == 'true' && steps.template_update.outputs.raise_update_issue == 'false' && steps.workflow_update_check.outputs.workflow_updated == 'false'
       run: |
@@ -69,11 +82,12 @@ runs:
         git merge template-patches
       env:
         CHECKOUT_BRANCH: ${{ github.ref_name }}
+      shell: bash
     - name: Create PR with template update
       if: steps.template_check.outputs.template_update == 'true' && steps.template_update.outputs.raise_update_issue == 'false' && steps.workflow_update_check.outputs.workflow_updated == 'false'
       uses: peter-evans/create-pull-request@v3
       with:
-        token: ${{ secrets.gh_token }}
+        token: ${{ inputs.gh_token }}
         commit-message: Update project template using Flexlate
         author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
         committer: GitHub <noreply@github.com>
