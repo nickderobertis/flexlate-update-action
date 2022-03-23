@@ -1,0 +1,1 @@
+flexlate-update-action
