@@ -45,7 +45,7 @@ runs:
     - name: Create Issue Template, Checking if Github Actions Workflow Updated
       id: workflow_update_check
       if: steps.template_check.outputs.template_update == 'true'
-      run: scripts/create-flexlate-issue-template.sh
+      run: create-flexlate-issue-template.sh
       shell: bash
     - name: Check if Issue Exists
       uses: nickderobertis/check-if-issue-exists-action@master
