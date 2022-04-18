@@ -34,18 +34,16 @@ runs:
       id: template_update
       if: steps.template_check.outputs.template_update == 'true'
       run: |
-        # Temporarily assume conflict state and force exit
-        fxt update --no-input &
-        sleep 10
-        git merge --abort
-        echo ::set-output name=update_has_conflicts::false;
-        # if fxt update --no-input --abort; then
-        #   echo "Applied updates successfully.";
-        #   echo ::set-output name=update_has_conflicts::false;
-        # else
-        #   echo "Encountered conflicts while trying to apply update. Will open an issue rather than a PR.";
-        #   echo ::set-output name=update_has_conflicts::true;
-        # fi;
+        if fxt update --no-input --abort --no-cleanup; then
+          echo "Applied updates successfully.";
+          echo ::set-output name=base_branch::master;
+          echo ::set-output name=merge_branch::template-patches;
+        else
+          echo "Encountered conflicts while trying to apply update. Will open a conflict resolution PR.";
+          git merge --abort;
+          echo ::set-output name=base_branch::flexlate-output-template-patches;
+          echo ::set-output name=merge_branch::flexlate-templates-template-patches;
+        fi;
       shell: bash
     - name: Push changes to Flexlate template branch
       if: steps.template_check.outputs.template_update == 'true'
@@ -55,6 +53,10 @@ runs:
       if: steps.template_check.outputs.template_update == 'true'
       run: git push origin flexlate-output-template-patches
       shell: bash
+    - name: Push changes to feature branch
+      if: steps.template_check.outputs.template_update == 'true'
+      run: git push origin template-patches
+      shell: bash
     - name: Set back to main branch
       if: steps.template_check.outputs.template_update == 'true'
       run: |
@@ -63,7 +65,7 @@ runs:
       env:
         CHECKOUT_BRANCH: ${{ github.ref_name }}
       shell: bash
-    - name: Create Direct PR with template update
+    - name: Create PR with template update
       if: steps.template_check.outputs.template_update == 'true' && steps.template_update.outputs.update_has_conflicts == 'false'
       uses: peter-evans/create-pull-request@v3
       with:
@@ -81,24 +83,5 @@ runs:
 
           [1]: https://github.com/nickderobertis/copier-pypi-sphinx-flexlate
         labels: no auto merge, automated pr
-        branch: template-patches
-    - name: Create PR For Resolving Merge Conflicts
-      if: steps.template_check.outputs.template_update == 'true' && steps.template_update.outputs.update_has_conflicts == 'true'
-      uses: peter-evans/create-pull-request@v3
-      with:
-        token: ${{ inputs.gh_token }}
-        commit-message: Update project template using Flexlate
-        author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-        committer: GitHub <noreply@github.com>
-        title: "Update project template using Flexlate"
-        body: |
-          Update template using Flexlate.
-
-          Before merging, review the changes and adjust manually if necessary.
-
-          - Updates coming from [copier-pypi-sphinx-flexlate][1]
-
-          [1]: https://github.com/nickderobertis/copier-pypi-sphinx-flexlate
-        labels: no auto merge, automated pr
-        branch: flexlate-templates-template-patches
-        base: flexlate-output-template-patches
+        branch: ${{ steps.template_update.outputs.merge_branch }}
+        base: ${{ steps.template_update.outputs.base_branch }}
