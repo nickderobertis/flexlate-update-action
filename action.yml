@@ -36,9 +36,7 @@ runs:
       run: |
         # Temporarily assume conflict state and force exit
         fxt update --no-input &
-        FLEXLATE_PID=$!
         sleep 10
-        kill $FLEXLATE_PID
         git merge --abort
         echo ::set-output name=update_has_conflicts::false;
         # if fxt update --no-input --abort; then
