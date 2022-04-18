@@ -47,13 +47,6 @@ runs:
         #   echo ::set-output name=update_has_conflicts::true;
         # fi;
       shell: bash
-    - name: Create Issue to Manually Update Template
-      if: steps.template_check.outputs.template_update == 'true' && steps.template_update.outputs.update_has_conflicts == 'true'
-      uses: JasonEtco/create-an-issue@5ee5d5edcd3777b7d5482d9342d3f08cd8daa3cd
-      with:
-        filename: temp-issue-template.md
-      env:
-        GITHUB_TOKEN: ${{ inputs.gh_token }}
     - name: Push changes to Flexlate template branch
       if: steps.template_check.outputs.template_update == 'true'
       run: git push origin flexlate-templates-template-patches
