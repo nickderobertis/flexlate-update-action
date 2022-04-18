@@ -57,13 +57,12 @@ runs:
       if: steps.template_check.outputs.template_update == 'true'
       run: git push origin template-patches
       shell: bash
-    - name: Set back to main branch
+    - name: Checkout base branch
       if: steps.template_check.outputs.template_update == 'true'
       run: |
         git checkout "$CHECKOUT_BRANCH"
-        git merge template-patches
       env:
-        CHECKOUT_BRANCH: ${{ github.ref_name }}
+        CHECKOUT_BRANCH: ${{ steps.template_update.outputs.base_branch }}
       shell: bash
     - name: Create PR with template update
       if: steps.template_check.outputs.template_update == 'true'
