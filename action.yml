@@ -65,7 +65,7 @@ runs:
         CHECKOUT_BRANCH: ${{ steps.template_update.outputs.base_branch }}
       shell: bash
     - name: Create PR with template update
-      if: steps.template_check.outputs.template_update == 'true'
+      if: false
       uses: peter-evans/create-pull-request@v3
       with:
         token: ${{ inputs.gh_token }}
