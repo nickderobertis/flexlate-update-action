@@ -65,15 +65,13 @@ runs:
         CHECKOUT_BRANCH: ${{ steps.template_update.outputs.base_branch }}
       shell: bash
     - name: Create PR with template update
-      if: false
-      uses: peter-evans/create-pull-request@v3
+      if: steps.template_check.outputs.template_update == 'true'
+      uses: repo-sync/pull-request@v2
       with:
-        token: ${{ inputs.gh_token }}
-        commit-message: Update project template using Flexlate
-        author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-        committer: GitHub <noreply@github.com>
-        title: "Update project template using Flexlate"
-        body: |
+        source_branch: ${{ steps.template_update.outputs.merge_branch }}
+        destination_branch: ${{ steps.template_update.outputs.base_branch }}
+        pr_title: Update project template using Flexlate
+        pr_body: |
           Update template using Flexlate.
 
           Before merging, review the changes and adjust manually if necessary.
@@ -81,6 +79,5 @@ runs:
           - Updates coming from [copier-pypi-sphinx-flexlate][1]
 
           [1]: https://github.com/nickderobertis/copier-pypi-sphinx-flexlate
-        labels: no auto merge, automated pr
-        branch: ${{ steps.template_update.outputs.merge_branch }}
-        base: ${{ steps.template_update.outputs.base_branch }}
+        pr_label: "no auto merge, automated pr"
+        github_token: ${{ inputs.gh_token }}
