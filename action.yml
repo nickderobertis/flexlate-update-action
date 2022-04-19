@@ -41,8 +41,12 @@ runs:
         else
           echo "Encountered conflicts while trying to apply update. Will open a conflict resolution PR.";
           git merge --abort;
+          echo "Branching off flexlate-templates-template-patches to create a temporary PR branch for conflict resolution.";
+          git checkout flexlate-templates-template-patches;
+          git checkout -b flexlate-templates-template-patches-for-conflicts;
+          git push origin flexlate-templates-template-patches-for-conflicts;
           echo ::set-output name=base_branch::flexlate-output-template-patches;
-          echo ::set-output name=merge_branch::flexlate-templates-template-patches;
+          echo ::set-output name=merge_branch::flexlate-templates-template-patches-for-conflicts;
         fi;
       shell: bash
     - name: Push changes to Flexlate template branch
