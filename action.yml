@@ -83,5 +83,5 @@ runs:
           - Updates coming from [copier-pypi-sphinx-flexlate][1]
 
           [1]: https://github.com/nickderobertis/copier-pypi-sphinx-flexlate
-        pr_label: "no auto merge, automated pr"
+        pr_label: "no auto merge,automated pr"
         github_token: ${{ inputs.gh_token }}
