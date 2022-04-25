@@ -6,6 +6,9 @@ Use this action to automatically open a PR with any template updates.
 
 ## Inputs
 
+- `gh_token`: The Github token to use for authentication
+- `main_branch_name`: The repository main branch, defaults to `master`
+
 ## Outputs
 
 ## Examples

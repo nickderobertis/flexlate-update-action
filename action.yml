@@ -1,9 +1,13 @@
-name: 'Flexlate Update Action'
-description: 'Official Flexlate Github Action for updating templates'
+name: "Flexlate Update Action"
+description: "Official Flexlate Github Action for updating templates"
 inputs:
   gh_token: # id of input
     description: "Github Token"
     required: true
+  main_branch_name:
+    description: "Name of the main branch"
+    required: true
+    default: "master"
 runs:
   using: "composite"
   steps:
@@ -36,7 +40,7 @@ runs:
       run: |
         if fxt update --no-input --abort --no-cleanup; then
           echo "Applied updates successfully.";
-          echo ::set-output name=base_branch::master;
+          echo ::set-output name=base_branch::$MAIN_BRANCH_NAME;
           echo ::set-output name=merge_branch::template-patches;
         else
           echo "Encountered conflicts while trying to apply update. Will open a conflict resolution PR.";
@@ -49,6 +53,8 @@ runs:
           echo ::set-output name=merge_branch::flexlate-templates-template-patches-for-conflicts;
         fi;
       shell: bash
+      env:
+        MAIN_BRANCH_NAME: ${{ inputs.main_branch_name }}
     - name: Push changes to Flexlate template branch
       if: steps.template_check.outputs.template_update == 'true'
       run: git push origin flexlate-templates-template-patches
