@@ -1,4 +1,1 @@
 node_modules
-{% if action_type == "typescript" %}
-ts-build
-{% endif %}
