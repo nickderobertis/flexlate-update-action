@@ -122,3 +122,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+node_modules
+{% if action_type == "typescript" %}
+ts-build
+{% endif %}

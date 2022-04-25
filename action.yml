@@ -1,0 +1,8 @@
+name: 'Flexlate Update Action'
+description: 'Official Flexlate Github Action for updating templates'
+runs:
+  using: composite
+  steps:
+    - run: echo hello world
+      shell: bash
+  

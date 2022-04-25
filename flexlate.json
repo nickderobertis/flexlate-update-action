@@ -14,7 +14,15 @@
   "applied_templates": [
     {
       "name": "copier-github-actions-semantic-release",
-      "data": {},
+      "data": {
+        "repo_name": "flexlate-update-action",
+        "full_name": "Flexlate Update Action",
+        "action_type": "composite",
+        "repo_username": "nickderobertis",
+        "short_description": "Official Flexlate Github Action for updating templates",
+        "package_author": "Nick DeRobertis",
+        "author_email": "derobertis.nick@gmail.com"
+      },
       "version": "129903c0dc57bd64df7084e8ca85a559d21e1d94",
       "add_mode": "local",
       "root": "."
