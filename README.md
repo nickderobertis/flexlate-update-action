@@ -2,6 +2,8 @@
 
 Official Flexlate Github Action for updating templates
 
+Use this action to automatically open a PR with any template updates.
+
 ## Inputs
 
 ## Outputs
