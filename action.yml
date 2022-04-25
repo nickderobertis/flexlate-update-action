@@ -1,5 +1,5 @@
-name: "Flexlate Update and PR"
-description: "Run Flexlate update and create a PR or issue"
+name: 'Flexlate Update Action'
+description: 'Official Flexlate Github Action for updating templates'
 inputs:
   gh_token: # id of input
     description: "Github Token"
