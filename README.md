@@ -1,4 +1,3 @@
-flexlate-update-action
 # Flexlate Update Action
 
 Official Flexlate Github Action for updating templates
