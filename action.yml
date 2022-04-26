@@ -8,6 +8,10 @@ inputs:
     description: "Name of the main branch"
     required: true
     default: "master"
+  pr_label:
+    description: "Label of the pull request"
+    required: true
+    default: "no auto merge,automated pr"
 runs:
   using: "composite"
   steps:
@@ -104,5 +108,5 @@ runs:
         destination_branch: ${{ steps.template_update.outputs.base_branch }}
         pr_title: ${{ steps.template_update.outputs.pr_title }}
         pr_body: ${{ steps.template_update.outputs.pr_body }}
-        pr_label: "no auto merge,automated pr"
+        pr_label: ${{ inputs.pr_label }}
         github_token: ${{ inputs.gh_token }}
