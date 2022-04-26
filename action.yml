@@ -42,6 +42,15 @@ runs:
           echo "Applied updates successfully.";
           echo ::set-output name=base_branch::$MAIN_BRANCH_NAME;
           echo ::set-output name=merge_branch::template-patches;
+          pr_title="Update project templates using Flexlate"
+          pr_body="
+          Update template using Flexlate.
+
+          Before merging, review the changes and adjust manually if necessary.
+
+          Output from `fxt check`:
+          $(fxt check)
+          "
         else
           echo "Encountered conflicts while trying to apply update. Will open a conflict resolution PR.";
           git merge --abort;
@@ -51,7 +60,20 @@ runs:
           git push origin flexlate-templates-template-patches-for-conflicts;
           echo ::set-output name=base_branch::flexlate-output-template-patches;
           echo ::set-output name=merge_branch::flexlate-templates-template-patches-for-conflicts;
+          pr_title="Resolve merge conflicts to enable Flexlate update"
+          pr_body="
+          There were merge conflicts while trying to update the template using Flexlate.
+
+          The merge conflict has been recreated in this PR. Simply resolve the conflicts
+          and then merge the PR, and a new PR will be automatically opened to merge
+          the changes into the main branch.
+
+          Merging this PR does **not** make any change in the main branch, only temporary
+          Flexlate branches.
+          "
         fi;
+        echo ::set-output name=pr_title::$pr_title;
+        echo ::set-output name=pr_body::$pr_body;
       shell: bash
       env:
         MAIN_BRANCH_NAME: ${{ inputs.main_branch_name }}
@@ -80,14 +102,7 @@ runs:
       with:
         source_branch: ${{ steps.template_update.outputs.merge_branch }}
         destination_branch: ${{ steps.template_update.outputs.base_branch }}
-        pr_title: Update project template using Flexlate
-        pr_body: |
-          Update template using Flexlate.
-
-          Before merging, review the changes and adjust manually if necessary.
-
-          - Updates coming from [copier-pypi-sphinx-flexlate][1]
-
-          [1]: https://github.com/nickderobertis/copier-pypi-sphinx-flexlate
+        pr_title: ${{ steps.template_update.outputs.pr_title }}
+        pr_body: ${{ steps.template_update.outputs.pr_body }}
         pr_label: "no auto merge,automated pr"
         github_token: ${{ inputs.gh_token }}
