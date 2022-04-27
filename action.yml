@@ -42,7 +42,7 @@ runs:
       id: template_update
       if: steps.template_check.outputs.template_update == 'true'
       run: |
-        fxt_check_output=$(fxt check);
+        fxt_check_output=$(fxt check || :);
         if fxt update --no-input --abort --no-cleanup; then
           echo "Applied updates successfully.";
           echo ::set-output name=base_branch::$MAIN_BRANCH_NAME;
