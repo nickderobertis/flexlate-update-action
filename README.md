@@ -1,8 +1,10 @@
 # Flexlate Update Action
 
-Official Flexlate Github Action for updating templates
+Official Flexlate Github Action for updating templates. Use this action to automatically open a PR with any template updates.
 
-Use this action to automatically open a PR with any template updates.
+See an overview of using Flexlate on CI [here](https://nickderobertis.github.io/flexlate/core-concepts.html#ci-workflows).
+
+See the explanation about using the Flexlate Update Action [here](https://nickderobertis.github.io/flexlate/tutorial/ci-automation.html#flexlate-update-workflow).
 
 ## Inputs
 
