@@ -1,9 +1,17 @@
-name: "Flexlate Update and PR"
-description: "Run Flexlate update and create a PR or issue"
+name: "Flexlate Update Action"
+description: "Official Flexlate Github Action for updating templates"
 inputs:
   gh_token: # id of input
     description: "Github Token"
     required: true
+  main_branch_name:
+    description: "Name of the main branch"
+    required: true
+    default: "master"
+  pr_label:
+    description: "Label of the pull request"
+    required: true
+    default: "no auto merge,automated pr"
 runs:
   using: "composite"
   steps:
@@ -34,71 +42,71 @@ runs:
       id: template_update
       if: steps.template_check.outputs.template_update == 'true'
       run: |
-        if fxt update --no-input --abort; then
+        if fxt update --no-input --abort --no-cleanup; then
           echo "Applied updates successfully.";
-          echo ::set-output name=raise_update_issue::false;
-        else
-          echo "Encountered conflicts while trying to apply update. Will open an issue rather than a PR.";
-          echo ::set-output name=raise_update_issue::true;
-        fi;
-      shell: bash
-    - name: Create Issue Template, Checking if Github Actions Workflow Updated
-      id: workflow_update_check
-      if: steps.template_check.outputs.template_update == 'true'
-      run: $GITHUB_ACTION_PATH/create-flexlate-issue-template.sh
-      shell: bash
-    - name: Check if Issue Exists
-      uses: nickderobertis/check-if-issue-exists-action@master
-      if: steps.template_check.outputs.template_update == 'true'
-      id: check_if_issue_exists
-      with:
-        repo: ${{ github.repository }}
-        token: ${{ inputs.gh_token }}
-        title: Manual Update to Files from Flexlate Needed
-        labels: automated issue, maintenance
-    - name: Create Issue to Manually Update Template
-      if: (steps.check_if_issue_exists.outputs.exists == 'false' && steps.template_check.outputs.template_update == 'true' && (steps.workflow_update_check.outputs.workflow_updated == 'true' || steps.template_update.outputs.raise_update_issue == 'true'))
-      uses: JasonEtco/create-an-issue@5ee5d5edcd3777b7d5482d9342d3f08cd8daa3cd
-      with:
-        filename: temp-issue-template.md
-      env:
-        GITHUB_TOKEN: ${{ inputs.gh_token }}
-    - name: Remove temporary issue template so it does not get committed
-      if: steps.template_check.outputs.template_update == 'true'
-      run: rm temp-issue-template.md
-      shell: bash
-    - name: Push changes to Flexlate template branch
-      if: steps.template_check.outputs.template_update == 'true' && steps.template_update.outputs.raise_update_issue == 'false' && steps.workflow_update_check.outputs.workflow_updated == 'false'
-      run: git push origin flexlate-templates-template-patches
-      shell: bash
-    - name: Push changes to Flexlate output branch
-      if: steps.template_check.outputs.template_update == 'true' && steps.template_update.outputs.raise_update_issue == 'false' && steps.workflow_update_check.outputs.workflow_updated == 'false'
-      run: git push origin flexlate-output-template-patches
-      shell: bash
-    - name: Set back to main branch
-      if: steps.template_check.outputs.template_update == 'true' && steps.template_update.outputs.raise_update_issue == 'false' && steps.workflow_update_check.outputs.workflow_updated == 'false'
-      run: |
-        git checkout "$CHECKOUT_BRANCH"
-        git merge template-patches
-      env:
-        CHECKOUT_BRANCH: ${{ github.ref_name }}
-      shell: bash
-    - name: Create PR with template update
-      if: steps.template_check.outputs.template_update == 'true' && steps.template_update.outputs.raise_update_issue == 'false' && steps.workflow_update_check.outputs.workflow_updated == 'false'
-      uses: peter-evans/create-pull-request@v3
-      with:
-        token: ${{ inputs.gh_token }}
-        commit-message: Update project template using Flexlate
-        author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-        committer: GitHub <noreply@github.com>
-        title: "Update project template using Flexlate"
-        body: |
+          echo ::set-output name=base_branch::$MAIN_BRANCH_NAME;
+          echo ::set-output name=merge_branch::template-patches;
+          pr_title="Update project templates using Flexlate"
+          pr_body="
           Update template using Flexlate.
 
           Before merging, review the changes and adjust manually if necessary.
 
-          - Updates coming from [copier-pypi-sphinx-flexlate][1]
+          Output from `fxt check`:
+          $(fxt check)
+          "
+        else
+          echo "Encountered conflicts while trying to apply update. Will open a conflict resolution PR.";
+          git merge --abort;
+          echo "Branching off flexlate-templates-template-patches to create a temporary PR branch for conflict resolution.";
+          git checkout flexlate-templates-template-patches;
+          git checkout -b flexlate-templates-template-patches-for-conflicts;
+          git push origin flexlate-templates-template-patches-for-conflicts;
+          echo ::set-output name=base_branch::flexlate-output-template-patches;
+          echo ::set-output name=merge_branch::flexlate-templates-template-patches-for-conflicts;
+          pr_title="Resolve merge conflicts to enable Flexlate update"
+          pr_body="
+          There were merge conflicts while trying to update the template using Flexlate.
 
-          [1]: https://github.com/nickderobertis/copier-pypi-sphinx-flexlate
-        labels: no auto merge, automated pr
-        branch: template-patches
+          The merge conflict has been recreated in this PR. Simply resolve the conflicts
+          and then merge the PR, and a new PR will be automatically opened to merge
+          the changes into the main branch.
+
+          Merging this PR does **not** make any change in the main branch, only temporary
+          Flexlate branches.
+          "
+        fi;
+        echo ::set-output name=pr_title::$pr_title;
+        echo ::set-output name=pr_body::$pr_body;
+      shell: bash
+      env:
+        MAIN_BRANCH_NAME: ${{ inputs.main_branch_name }}
+    - name: Push changes to Flexlate template branch
+      if: steps.template_check.outputs.template_update == 'true'
+      run: git push origin flexlate-templates-template-patches
+      shell: bash
+    - name: Push changes to Flexlate output branch
+      if: steps.template_check.outputs.template_update == 'true'
+      run: git push origin flexlate-output-template-patches
+      shell: bash
+    - name: Push changes to feature branch
+      if: steps.template_check.outputs.template_update == 'true'
+      run: git push origin template-patches
+      shell: bash
+    - name: Checkout base branch
+      if: steps.template_check.outputs.template_update == 'true'
+      run: |
+        git checkout "$CHECKOUT_BRANCH"
+      env:
+        CHECKOUT_BRANCH: ${{ steps.template_update.outputs.base_branch }}
+      shell: bash
+    - name: Create PR with template update
+      if: steps.template_check.outputs.template_update == 'true'
+      uses: repo-sync/pull-request@v2
+      with:
+        source_branch: ${{ steps.template_update.outputs.merge_branch }}
+        destination_branch: ${{ steps.template_update.outputs.base_branch }}
+        pr_title: ${{ steps.template_update.outputs.pr_title }}
+        pr_body: ${{ steps.template_update.outputs.pr_body }}
+        pr_label: ${{ inputs.pr_label }}
+        github_token: ${{ inputs.gh_token }}
