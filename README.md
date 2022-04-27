@@ -51,7 +51,7 @@ jobs:
         uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: nickderobertis/flexlate-update-action@alpha
+      - uses: nickderobertis/flexlate-update-action@v1
         with:
           gh_token: ${{ secrets.gh_token }}
 ```
