@@ -12,3 +12,6 @@ jobs:
         uses: actions/checkout@v3
       - name: Test Action
         uses: ./ # Uses an action in the root directory
+        with:
+          gh_token: ${{ secrets.GH_TOKEN }}
+          main_branch_name: main
